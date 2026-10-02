@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Fire Alarm Design Challenge</title>
+
+<style>
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    margin:0;
+    padding:20px;
+    background:#f4f6f8;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+h1{
+    color:#c62828;
+}
+
+.tabs{
+    margin-bottom:20px;
+}
+
+.tabButton{
+    background:#555;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    margin-right:5px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.tabButton.active{
+    background:#c62828;
+}
+
+.tabContent{
+    display:none;
+}
+
+.tabContent.active{
+    display:block;
+}
+
+.zone{
+    background:#fafafa;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.solution{
+    background:#eef5ff;
+    padding:10px;
+    border-radius:8px;
+    margin-top:10px;
+}
+
+.correct{
+    background:#d4edda;
+    color:#155724;
+    padding:15px;
+    border-radius:8px;
+}
+
+.incorrect{
+    background:#f8d7da;
+    color:#721c24;
+    padding:15px;
+    border-radius:8px;
+}
+
+button{
+    background:#c62828;
+    color:white;
+    border:none;
+    border-radius:5px;
+    padding:10px 15px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#8e0000;
+}
+
+input,select{
+    padding:8px;
+    margin-top:5px;
+}
+
+.instructions{
+    background:#fff8e1;
+    border-left:4px solid #fbc02d;
+    padding:10px;
+    margin-bottom:20px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Fire Alarm Design Challenge</h1>
+
+<div class="tabs">
+    <button class="tabButton active"
+        onclick="showTab('ampTab',this)">
+        Amplifier Sizing
+    </button>
+
+    <button class="tabButton"
+        onclick="showTab('nacTab',this)">
+        NAC Voltage Drop
+    </button>
+</div>
+
+<!-- ================= AMPLIFIER TAB ================= -->
+
+<div id="ampTab" class="tabContent active">
+
+<div class="instructions">
+<strong>Amplifier Design Rules</strong>
+
+<ul>
+<li>Only speaker loads contribute to amplifier wattage.</li>
+<li>Strobes do NOT add amplifier load.</li>
+<li>Add 20% spare capacity.</li>
+<li>Select the smallest amplifier that meets the demand.</li>
+</ul>
+
+</div>
+
+<div id="challenge"></div>
+
+<div id="studentAnswers"></div>
+
+<button onclick="checkAnswer()">
+Check Answers
+</button>
+
+<button onclick="generateChallenge()">
+New Challenge
+</button>
+
+<div id="result"></div>
+
+</div>
+
+<!-- ================= NAC TAB ================= -->
+
+<div id="nacTab" class="tabContent">
+
+<div class="instructions">
+<strong>NAC Design Rules</strong>
+
+<ul>
+<li>Total current includes horns and strobes.</li>
+<li>Use round-trip conductor length.</li>
+<li>Voltage Drop = Current × Resistance.</li>
+<li>Minimum acceptable end voltage = 20.4V.</li>
+</ul>
+
+</div>
+
+<div id="nacChallenge"></div>
+
+<div id="nacAnswers"></div>
+
+<button onclick="checkNAC()">
+Check Answers
+</button>
+
+<button onclick="generateNACChallenge()">
+New Challenge
+</button>
+
+<div id="nacResult"></div>
+
+</div>
+
+</div>
+
+<script>
+
+/********************************************************
+TAB CONTROL
+********************************************************/
+
+function showTab(tabId,btn){
+
+    document
+        .querySelectorAll('.tabContent')
+        .forEach(tab=>tab.classList.remove('active'));
+
+    document
+        .querySelectorAll('.tabButton')
+        .forEach(tab=>tab.classList.remove('active'));
+
+    document
+        .getElementById(tabId)
+        .classList.add('active');
+
+    btn.classList.add('active');
+}
+
+/********************************************************
+AMPLIFIER CHALLENGE
+********************************************************/
+
+const amplifiers=[25,50,100,150,200,300];
+
+let challenge={};
+
+function generateChallenge(){
+
+    let zones=[];
+
+    let zoneCount=
+        Math.floor(Math.random()*3)+2;
+
+    let challengeHTML=
+        "<h2>Audio System Scenario</h2>";
+
+    for(let i=1;i<=zoneCount;i++){
+
+        const zone={};
+
+        zone.zone=i;
+
+        zone.quarterSpeakers=
+            Math.floor(Math.random()*12)+2;
+
+        zone.halfSpeakers=
+            Math.floor(Math.random()*10)+2;
+
+        zone.oneSpeakers=
+            Math.floor(Math.random()*8)+2;
+
+        zone.twoSpeakers=
+            Math.floor(Math.random()*6)+1;
+
+        zone.strobes=
+            Math.floor(Math.random()*20)+5;
+
+        zone.quarterLoad=
+            zone.quarterSpeakers*0.25;
+
+        zone.halfLoad=
+            zone.halfSpeakers*0.50;
+
+        zone.oneLoad=
+            zone.oneSpeakers*1;
+
+        zone.twoLoad=
+            zone.twoSpeakers*2;
+
+        zone.totalLoad=
+            zone.quarterLoad+
+            zone.halfLoad+
+            zone.oneLoad+
+            zone.twoLoad;
+
+        zone.requiredLoad=
+            zone.totalLoad*1.20;
+
+        zone.correctAmp=
+            amplifiers.find(
+                amp=>amp>=zone.requiredLoad
+            );
+
+        zones.push(zone);
+
+        challengeHTML += `
+        <div class="zone">
+
+            <h3>Zone ${i}</h3>
+
+            <ul>
+                <li>${zone.quarterSpeakers} Speakers @ ¼W</li>
+                <li>${zone.halfSpeakers} Speakers @ ½W</li>
+                <li>${zone.oneSpeakers} Speakers @ 1W</li>
+                <li>${zone.twoSpeakers} Speakers @ 2W</li>
+                <li>${zone.strobes} Strobes</li>
+            </ul>
+
+        </div>`;
+    }
+
+    challenge={zones};
+
+    document.getElementById(
+        "challenge").innerHTML=
+        challengeHTML;
+
+    let answerHTML=
+        "<h2>Student Answers</h2>";
+
+    zones.forEach(zone=>{
+
+        answerHTML += `
+
+        <div class="zone">
+
+        <h3>Zone ${zone.zone}</h3>
+
+        Required Wattage<br>
+        <input
+            id="watts${zone.zone}"
+            type="number"
+            step="0.1">
+
+        <br><br>
+
+        Amplifier
+
+        <br>
+
+        <select id="amp${zone.zone}">
+            <option value="">Select</option>
+            <option value="25">25W</option>
+            <option value="50">50W</option>
+            <option value="100">100W</option>
+            <option value="150">150W</option>
+            <option value="200">200W</option>
+            <option value="300">300W</option>
+        </select>
+
+        </div>
+        `;
+    });
+
+    document.getElementById(
+        "studentAnswers").innerHTML=
+        answerHTML;
+
+    document.getElementById(
+        "result").innerHTML="";
+}
+
+function checkAnswer(){
+
+    let allCorrect=true;
+
+    let solutionHTML=
+        "<h2>Answer Key</h2>";
+
+    let totalCapacity=0;
+
+    challenge.zones.forEach(zone=>{
+
+        const watts=
+            parseFloat(
+                document.getElementById(
+                    `watts${zone.zone}`).value);
+
+        const amp=
+            parseInt(
+                document.getElementById(
+                    `amp${zone.zone}`).value);
+
+        const wattsCorrect=
+            Math.abs(
+                watts-zone.requiredLoad)<0.25;
+
+        const ampCorrect=
+            amp===zone.correctAmp;
+
+        if(!wattsCorrect || !ampCorrect){
+            allCorrect=false;
+        }
+
+        totalCapacity += zone.correctAmp;
+
+        solutionHTML += `
+
+        <div class="solution">
+
+        <h3>Zone ${zone.zone}</h3>
+
+        ¼W:
+        ${zone.quarterSpeakers}
+        × 0.25 =
+        ${zone.quarterLoad.toFixed(2)}W
+
+        <br><br>
+
+        ½W:
+        ${zone.halfSpeakers}
+        × 0.50 =
+        ${zone.halfLoad.toFixed(2)}W
+
+        <br><br>
+
+        1W:
+        ${zone.oneSpeakers}
+        × 1 =
+        ${zone.oneLoad.toFixed(2)}W
+
+        <br><br>
+
+        2W:
+        ${zone.twoSpeakers}
+        × 2 =
+        ${zone.twoLoad.toFixed(2)}W
+
+        <br><br>
+
+        Total Load:
+        ${zone.totalLoad.toFixed(2)}W
+
+        <br><br>
+
+        Required Load (120%):
+        ${zone.requiredLoad.toFixed(2)}W
+
+        <br><br>
+
+        Correct Amplifier:
+        ${zone.correctAmp}W
+
+        </div>
+        `;
+    });
+
+    solutionHTML += `
+
+    <div class="solution">
+
+    <strong>
+    Total Installed Amplifier Capacity:
+    ${totalCapacity}W
+    </strong>
+
+    </div>
+    `;
+
+    const resultBox=
+        document.getElementById("result");
+
+    resultBox.className=
+        allCorrect ?
+        "correct" :
+        "incorrect";
+
+    resultBox.innerHTML=
+        (allCorrect
+            ? "<h2>✅ Correct!</h2>"
+            : "<h2>❌ Review Calculations</h2>")
+        + solutionHTML;
+}
+
+/********************************************************
+NAC CHALLENGE
+********************************************************/
+
+let nacChallenge={};
+
+function generateNACChallenge(){
+
+    const wires=[
+
+        {size:"18 AWG",r:20.95},
+        {size:"16 AWG",r:13.17},
+        {size:"14 AWG",r:8.29},
+        {size:"12 AWG",r:5.21}
+
+    ];
+
+    const wire=
+        wires[
+            Math.floor(Math.random()*wires.length)
+        ];
+
+    const distance=
+        Math.floor(Math.random()*250)+50;
+
+    const strobes=
+        Math.floor(Math.random()*15)+5;
+
+    const strobeCurrentOptions=[
+        0.075,
+        0.110,
+        0.185
+    ];
+
+    const strobeCurrent=
+        strobeCurrentOptions[
+            Math.floor(
+                Math.random()*
+                strobeCurrentOptions.length
+            )
+        ];
+
+    const quarterHorns=
+        Math.floor(Math.random()*6)+2;
+
+    const halfHorns=
+        Math.floor(Math.random()*6)+2;
+
+    const oneHorns=
+        Math.floor(Math.random()*5)+1;
+
+    const twoHorns=
+        Math.floor(Math.random()*4)+1;
+
+    const hornCurrent=
+
+        (quarterHorns*0.020)+
+        (halfHorns*0.030)+
+        (oneHorns*0.050)+
+        (twoHorns*0.080);
+
+    const totalCurrent=
+        hornCurrent+
+        (strobes*strobeCurrent);
+
+    const resistance=
+        (wire.r/1000)*(distance*2);
+
+    const voltageDrop=
+        totalCurrent*resistance;
+
+    const endVoltage=
+        24-voltageDrop;
+
+    const passes=
+        endVoltage>=20.4;
+
+    nacChallenge={
+
+        wire,
+        distance,
+        strobes,
+        strobeCurrent,
+        quarterHorns,
+        halfHorns,
+        oneHorns,
+        twoHorns,
+        totalCurrent,
+        resistance,
+        voltageDrop,
+        endVoltage,
+        passes
+
+    };
+
+    document.getElementById(
+        "nacChallenge").innerHTML=`
+
+        <div class="zone">
+
+        <h2>Circuit Data</h2>
+
+        <ul>
+
+        <li>
+        Conductor:
+        ${wire.size}
+        </li>
+
+        <li>
+        Resistance:
+        ${wire.r} Ω/1000m
+        </li>
+
+        <li>
+        One-Way Length:
+        ${distance} m
+        </li>
+
+        </ul>
+
+        <h3>Devices</h3>
+
+        <ul>
+
+        <li>
+        ${quarterHorns}
+        Horns @ ¼W
+        </li>
+
+        <li>
+        ${halfHorns}
+        Horns @ ½W
+        </li>
+
+        <li>
+        ${oneHorns}
+        Horns @ 1W
+        </li>
+
+        <li>
+        ${twoHorns}
+        Horns @ 2W
+        </li>
+
+        <li>
+        ${strobes}
+        Strobes @
+        ${strobeCurrent}A each
+        </li>
+
+        </ul>
+
+        </div>
+    `;
+
+    document.getElementById(
+        "nacAnswers").innerHTML=`
+
+        <div class="zone">
+
+        Total Current (A)<br>
+        <input id="studentCurrent"
+               type="number"
+               step="0.01">
+
+        <br><br>
+
+        Voltage Drop (V)<br>
+        <input id="studentDrop"
+               type="number"
+               step="0.01">
+
+        <br><br>
+
+        End Voltage (V)<br>
+        <input id="studentVoltage"
+               type="number"
+               step="0.01">
+
+        <br><br>
+
+        Pass or Fail<br>
+
+        <select id="studentPass">
+            <option value="">
+                Select
+            </option>
+            <option>Pass</option>
+            <option>Fail</option>
+        </select>
+
+        </div>
+    `;
+
+    document.getElementById(
+        "nacResult").innerHTML="";
+}
+
+function checkNAC(){
+
+    const current=
+        parseFloat(
+            document.getElementById(
+                "studentCurrent").value);
+
+    const drop=
+        parseFloat(
+            document.getElementById(
+                "studentDrop").value);
+
+    const voltage=
+        parseFloat(
+            document.getElementById(
+                "studentVoltage").value);
+
+    const passFail=
+        document.getElementById(
+            "studentPass").value;
+
+    const c=
+        Math.abs(
+            current-
+            nacChallenge.totalCurrent) < .05;
+
+    const d=
+        Math.abs(
+            drop-
+            nacChallenge.voltageDrop) < .10;
+
+    const v=
+        Math.abs(
+            voltage-
+            nacChallenge.endVoltage) < .10;
+
+    const p=
+        passFail ===
+        (nacChallenge.passes
+            ? "Pass"
+            : "Fail");
+
+    const correct=
+        c&&d&&v&&p;
+
+    const box=
+        document.getElementById(
+            "nacResult");
+
+    box.className=
+        correct ?
+        "correct" :
+        "incorrect";
+
+    box.innerHTML=`
+
+    <h2>
+    ${correct ? "✅ Correct!" : "❌ Review Calculations"}
+    </h2>
+
+    <div class="solution">
+
+    Total Current:
+    ${nacChallenge.totalCurrent.toFixed(2)}A
+
+    <br><br>
+
+    Circuit Resistance:
+    ${nacChallenge.resistance.toFixed(2)}Ω
+
+    <br><br>
+
+    Voltage Drop:
+    ${nacChallenge.voltageDrop.toFixed(2)}V
+
+    <br><br>
+
+    End Voltage:
+    ${nacChallenge.endVoltage.toFixed(2)}V
+
+    <br><br>
+
+    Result:
+    ${nacChallenge.passes ? "PASS" : "FAIL"}
+
+    </div>
+    `;
+}
+
+generateChallenge();
+generateNACChallenge();
+
+</script>
+
+</body>
+</html>
