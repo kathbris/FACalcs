@@ -163,13 +163,10 @@ New Challenge
 <div id="nacTab" class="tabContent">
 
 <div class="instructions">
-<strong>NAC Design Rules</strong>
+<strong>NAC Information</strong>
 
 <ul>
-<li>Total current includes horns and strobes.</li>
-<li>Use round-trip conductor length.</li>
-<li>Voltage Drop = Current × Resistance.</li>
-<li>Minimum acceptable end voltage = 20.4V.</li>
+<li>Supply voltage is 24Vdc</li>
 </ul>
 
 </div>
@@ -517,10 +514,10 @@ function generateNACChallenge(){
 
     const hornCurrent=
 
-        (quarterHorns*0.020)+
-        (halfHorns*0.030)+
-        (oneHorns*0.050)+
-        (twoHorns*0.080);
+        (quarterHorns*(0.25/24))+
+        (halfHorns*(0.50/24))+
+        (oneHorns*(1.00/24))+
+        (twoHorns*(2.00/24));
 
     const totalCurrent=
         hornCurrent+
