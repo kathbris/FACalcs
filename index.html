@@ -136,8 +136,6 @@ input,select{
 <strong>Amplifier Design Rules</strong>
 
 <ul>
-<li>Only speaker loads contribute to amplifier wattage.</li>
-<li>Strobes do NOT add amplifier load.</li>
 <li>Add 20% spare capacity.</li>
 <li>Select the smallest amplifier that meets the demand.</li>
 </ul>
@@ -294,7 +292,7 @@ function generateChallenge(){
                 <li>${zone.halfSpeakers} Speakers @ ½W</li>
                 <li>${zone.oneSpeakers} Speakers @ 1W</li>
                 <li>${zone.twoSpeakers} Speakers @ 2W</li>
-                <li>${zone.strobes} Strobes</li>
+                <li>${zone.strobes} Strobes @ 30 mA</li>
             </ul>
 
         </div>`;
